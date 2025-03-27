@@ -11,7 +11,7 @@ RUN yarn install --frozen-lockfile
 COPY . .
 
 # Expose the port your app uses
-EXPOSE 3000
+EXPOSE 8080
 
 # Start the app
 CMD ["node", "index.js"]
