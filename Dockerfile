@@ -1,28 +1,17 @@
-FROM python:3.11-slim
+FROM node:18-alpine
 
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl build-essential \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Poetry
-RUN curl -sSL https://install.python-poetry.org | python3 -
-ENV PATH="/root/.local/bin:$PATH"
-
+# Set working directory
 WORKDIR /app
 
-# Copy the rest of the application
+# Install dependencies
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile
+
+# Copy the rest of the code
 COPY . .
 
-# Install dependencies
-RUN poetry config virtualenvs.create false \
-    && poetry install --no-interaction --no-ansi
+# Expose the port your app uses
+EXPOSE 3000
 
-
-
-EXPOSE 8000
-
-CMD ["uvicorn", "hctb.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Start the app
+CMD ["node", "index.js"]
