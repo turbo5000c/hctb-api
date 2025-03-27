@@ -14,15 +14,14 @@ ENV PATH="/root/.local/bin:$PATH"
 
 WORKDIR /app
 
-# Copy only dependency files first for caching
-COPY pyproject.toml poetry.lock* ./
+# Copy the rest of the application
+COPY . .
 
 # Install dependencies
 RUN poetry config virtualenvs.create false \
     && poetry install --no-interaction --no-ansi
 
-# Copy the rest of the application
-COPY . .
+
 
 EXPOSE 8000
 
