@@ -154,7 +154,15 @@ app.post("/api/login", async function (req, res) {
     page.waitForNavigation({ waitUntil: 'networkidle2' })
   ]);
   console.log("[Info] Logging in to Here Comes The Bus");
+  // 🔍 Take a screenshot after login attempt
+  await page.screenshot({ path: "after-login.png", fullPage: true });
 
+  // 🐞 Optional: log HTML (can get huge)
+  const html = await page.content();
+  console.log("[Debug] Page after login:\n", html);
+
+  // 🧭 Optional: log where we ended up
+  console.log("[Debug] URL after login:", page.url());
   const cookies = await page.cookies();
   var i = 0;
   var cookie = "";
