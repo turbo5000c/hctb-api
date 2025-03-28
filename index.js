@@ -39,7 +39,14 @@ app.post("/api/session", async function (req, res) {
   })
     .then((resp) => resp.json())
     .then((json) => {
-      var lat, lon
+      if (!json.d || typeof json.d !== "string") {
+        return res.status(500).json({
+          success: false,
+          error: "Unexpected response format from HCTB API",
+          response: json
+        });
+      }
+      let lat, lon
       if (json.d.includes("SetBusPushPin")) {
         var strip = /SetBusPushPin\(([+-]?(?=\.\d|\d)(?:\d+)?(?:\.?\d*))(?:[eE]([+-]?\d+))?,([+-]?(?=\.\d|\d)(?:\d+)?(?:\.?\d*))(?:[eE]([+-]?\d+))?\)/i.exec("SetBusPushPin(123.456,679.012)" + json.d)[0]
         var coords = /([+-]?(?=\.\d|\d)(?:\d+)?(?:\.?\d*))(?:[eE]([+-]?\d+))?,([+-]?(?=\.\d|\d)(?:\d+)?(?:\.?\d*))(?:[eE]([+-]?\d+))?/i.exec(strip)[0].split(",")
@@ -162,10 +169,26 @@ app.post("/api/login", async function (req, res) {
   const selected = await page.$$eval('option[selected="selected"]', el =>
     el.map(o => ({ text: o.textContent, value: o.value }))
   );
+
   console.log("[Debug] selected options:", selected);
-  const value = selected.length >= 3
-    ? { name: selected[1].text, person: selected[1].value, time: selected[2].value }
-    : { name: null, person: null, time: null };
+
+  // Attempt to pull 'person' and 'time' from meaningful entries
+  const person = selected.find(o => o.value && o.value.includes('-')); // UUIDs have dashes
+  const time = selected.find(o => o.text && /\d{1,2}:\d{2}/.test(o.text)); // Rough time format
+
+  const value = {
+    name: person?.text || null,
+    person: person?.value || null,
+    time: time?.value || null,
+  };
+
+  if (!value.person || !value.time) {
+    return res.status(400).json({
+      success: false,
+      error: "Could not extract required fields from the login page.",
+      debug: selected
+    });
+  }
   const times = await page.evaluate(() => {
     const selectElement = document.getElementById('ctl00_ctl00_cphWrapper_cphControlPanel_ddlSelectTimeOfDay');
     const optionElements = selectElement.querySelectorAll('option');
@@ -206,7 +229,14 @@ app.post("/api/login", async function (req, res) {
   })
     .then((resp) => resp.json())
     .then((json) => {
-      var lat, lon
+      if (!json.d || typeof json.d !== "string") {
+        return res.status(500).json({
+          success: false,
+          error: "Unexpected response format from HCTB API",
+          response: json
+        });
+      }
+      let lat, lon
       if (json.d.includes("SetBusPushPin")) {
         var strip = /SetBusPushPin\(([+-]?(?=\.\d|\d)(?:\d+)?(?:\.?\d*))(?:[eE]([+-]?\d+))?,([+-]?(?=\.\d|\d)(?:\d+)?(?:\.?\d*))(?:[eE]([+-]?\d+))?\)/i.exec("SetBusPushPin(123.456,679.012)" + json.d)[0]
         var coords = /([+-]?(?=\.\d|\d)(?:\d+)?(?:\.?\d*))(?:[eE]([+-]?\d+))?,([+-]?(?=\.\d|\d)(?:\d+)?(?:\.?\d*))(?:[eE]([+-]?\d+))?/i.exec(strip)[0].split(",")
