@@ -1,5 +1,5 @@
 FROM node:18-alpine
-
+ENV ENABLE_UI=true
 # Install OS packages required by Chromium
 RUN apk add --no-cache \
     chromium \
