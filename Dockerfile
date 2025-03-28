@@ -4,14 +4,13 @@ FROM node:18-alpine
 WORKDIR /app
 
 # Install dependencies
-COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile
-
+#COPY package.json yarn.lock ./
 # Copy the rest of the code
 COPY . .
+RUN yarn install --frozen-lockfile
 
 # Expose the port your app uses
 EXPOSE 8080
 
 # Start the app
-CMD ["node", "index.js"]
+CMD ["yarn", "start"]
