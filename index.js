@@ -180,9 +180,30 @@ app.post("/api/login", async function (req, res) {
 
   console.log("[Debug] selected options:", selected);
 
-  // Attempt to pull 'person' and 'time' from meaningful entries
-  const person = selected.find(o => o.value && o.value.includes('-')); // UUIDs have dashes
-  const time = selected.find(o => o.text && /\d{1,2}:\d{2}/.test(o.text)); // Rough time format
+  // 🎯 Get selected passenger (person + name)
+  const person = await page.$eval(
+    '#ctl00_ctl00_cphWrapper_cphControlPanel_ddlSelectPassenger',
+    el => {
+      const selected = el.options[el.selectedIndex];
+      return { name: selected.textContent.trim(), person: selected.value };
+    }
+  );
+
+  // 🎯 Get selected time
+  const time = await page.$eval(
+    '#ctl00_ctl00_cphWrapper_cphControlPanel_ddlSelectTimeOfDay',
+    el => {
+      const selected = el.options[el.selectedIndex];
+      return { time: selected.value };
+    }
+  );
+
+  // Combine into your expected structure 
+  const value = {
+    name: person.name || null,
+    person: person.person || null,
+    time: time.time || null
+  };
 
   const value = {
     name: person?.text || null,
