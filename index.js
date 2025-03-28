@@ -158,9 +158,14 @@ app.post("/api/login", async function (req, res) {
     i++;
   }
   if (!cookie.includes(".ASPXFORMSAUTH")) return res.json({ success: false, error: "Incorrect credentials" }).status(400)
-  const value = await page.$$eval('option[selected="selected"]', (el) => {
-    return { name: el[1].innerHTML, person: el[1].value, time: el[2].value };
-  });
+  await page.waitForSelector('option[selected="selected"]');
+  const selected = await page.$$eval('option[selected="selected"]', el =>
+    el.map(o => ({ text: o.textContent, value: o.value }))
+  );
+  console.log("[Debug] selected options:", selected);
+  const value = selected.length >= 3
+    ? { name: selected[1].text, person: selected[1].value, time: selected[2].value }
+    : { name: null, person: null, time: null };
   const times = await page.evaluate(() => {
     const selectElement = document.getElementById('ctl00_ctl00_cphWrapper_cphControlPanel_ddlSelectTimeOfDay');
     const optionElements = selectElement.querySelectorAll('option');
